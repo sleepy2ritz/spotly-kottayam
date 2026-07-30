@@ -34,7 +34,7 @@ app.post('/api/chat', async (req, res) => {
         Focus strictly on recommending cafes, biriyani spots (like Nahdi Kuzhimandi, Calicut Cafe), 
         and hangouts. Answer casually and keep it under 3 sentences. User question: ${prompt}`;
 
-        // Updated model to gemini-2.5-flash
+        // Updated model endpoint
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
