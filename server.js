@@ -35,7 +35,7 @@ app.post('/api/chat', async (req, res) => {
         and hangouts. Answer casually and keep it under 3 sentences. User question: ${prompt}`;
 
         // Updated model endpoint
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
