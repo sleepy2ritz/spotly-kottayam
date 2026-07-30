@@ -30,15 +30,17 @@ app.post('/api/chat', async (req, res) => {
 
         const { prompt } = req.body;
 
-        // Proper v1beta payload formatting with system_instruction
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const systemPrompt = `You are SpotBot, an intelligent local guide built into Spotly for Kottayam, Kerala. 
+        You know everything about Kottayam: study spots, cafes, public libraries, sports turfs, parks, colleges, view points, and food spots.
+        Recommend spots based on what the user asks. Keep your answers helpful, local, casual, and brief (under 3 sentences).`;
+
+        // Standard production endpoint for Gemini 1.5 Flash
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 system_instruction: {
-                    parts: [{ 
-                        text: "You are a location assistant for Spotly, embedded in Kottayam town, Kerala. Focus strictly on recommending cafes, biriyani spots (like Nahdi Kuzhimandi, Calicut Cafe), and hangouts. Answer casually and keep it under 3 sentences." 
-                    }]
+                    parts: [{ text: systemPrompt }]
                 },
                 contents: [{ 
                     parts: [{ text: prompt }] 
@@ -57,7 +59,7 @@ app.post('/api/chat', async (req, res) => {
         res.json({ reply: botReply });
     } catch (error) {
         console.error("Server Error:", error);
-        res.status(500).json({ reply: "Sorry, the network is too congested right now!" });
+        res.status(500).json({ reply: "Sorry, network or server error occurred!" });
     }
 });
 
