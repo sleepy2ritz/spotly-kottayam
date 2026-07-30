@@ -30,16 +30,19 @@ app.post('/api/chat', async (req, res) => {
 
         const { prompt } = req.body;
 
-        const systemPrompt = `You are a location assistant for Spotly, embedded in Kottayam town, Kerala. 
-        Focus strictly on recommending cafes, biriyani spots (like Nahdi Kuzhimandi, Calicut Cafe), 
-        and hangouts. Answer casually and keep it under 3 sentences. User question: ${prompt}`;
-
-        // Updated model endpoint
+        // Proper v1beta payload formatting with system_instruction
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: systemPrompt }] }]
+                system_instruction: {
+                    parts: [{ 
+                        text: "You are a location assistant for Spotly, embedded in Kottayam town, Kerala. Focus strictly on recommending cafes, biriyani spots (like Nahdi Kuzhimandi, Calicut Cafe), and hangouts. Answer casually and keep it under 3 sentences." 
+                    }]
+                },
+                contents: [{ 
+                    parts: [{ text: prompt }] 
+                }]
             })
         });
 
