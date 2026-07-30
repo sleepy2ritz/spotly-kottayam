@@ -1,4 +1,3 @@
-// package.json (For Cloud Run Deployment)
 {
   "name": "spotly-kottayam-backend",
   "version": "1.0.0",
