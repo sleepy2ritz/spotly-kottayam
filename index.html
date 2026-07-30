@@ -38,7 +38,7 @@
 
   /* Header Bar Overlay */
   .top-header {
-    position: absolute; top: 12px; left: 12px; right: 12px;
+    position: absolute; top: 10px; left: 10px; right: 10px;
     z-index: 10;
     display: flex; justify-content: space-between; align-items: center;
     pointer-events: none;
@@ -46,42 +46,42 @@
   .top-header * { pointer-events: auto; }
 
   .brand-pill {
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 6px 14px;
-    border-radius: 20px;
-    display: flex; align-items: center; gap: 8px;
-    font-weight: 700; font-size: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 4px 10px;
+    border-radius: 16px;
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 700; font-size: 0.85rem;
   }
   .edition-badge {
     background: rgba(0, 210, 255, 0.15);
     color: var(--cyan);
-    font-size: 0.68rem;
-    padding: 2px 8px;
-    border-radius: 12px;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 8px;
     border: 1px solid rgba(0, 210, 255, 0.3);
   }
 
   .mic-indicator {
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.75rem;
     color: var(--text-muted);
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 5px;
   }
-  .dot-glow { width: 8px; height: 8px; background: var(--cyan); border-radius: 50%; box-shadow: 0 0 8px var(--cyan); }
+  .dot-glow { width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; box-shadow: 0 0 6px var(--cyan); }
 
-  /* Floating Filter Scrollbar */
+  /* Floating Filter Scrollbar - Scaled down */
   .filter-bar {
-    position: absolute; top: 56px; left: 12px; right: 12px;
+    position: absolute; top: 48px; left: 10px; right: 10px;
     z-index: 10;
-    display: flex; gap: 8px;
+    display: flex; gap: 6px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
     scrollbar-width: none;
   }
   .filter-bar::-webkit-scrollbar { display: none; }
@@ -90,20 +90,20 @@
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 8px 14px;
+    border-radius: 16px;
+    padding: 5px 10px;
     color: var(--text-muted);
-    font-size: 0.85rem;
-    display: flex; align-items: center; gap: 6px;
-    min-width: 130px;
+    font-size: 0.75rem;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap;
   }
   .filter-chip {
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 8px 14px;
-    font-size: 0.82rem;
+    border-radius: 16px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
     white-space: nowrap;
     color: var(--text-muted);
     cursor: pointer;
@@ -114,80 +114,96 @@
     color: #000;
     font-weight: 600;
     border-color: var(--cyan);
-    box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
   }
 
-  /* Custom Glowing Map Markers */
+  /* Custom Glowing Map Markers - Scaled down */
   .spot-marker {
     position: relative;
-    width: 44px; height: 44px;
+    width: 36px; height: 36px;
     border-radius: 50%;
     background: rgba(15, 23, 42, 0.9);
     border: 2px solid var(--cyan);
-    box-shadow: 0 0 15px rgba(0, 210, 255, 0.4), inset 0 0 10px rgba(0, 210, 255, 0.2);
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.4), inset 0 0 8px rgba(0, 210, 255, 0.2);
     display: flex; justify-content: center; align-items: center;
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
   .spot-marker.crowded {
     border-color: #ef4444;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
   }
   .marker-badge-top {
-    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
     background: var(--cyan); color: #000;
-    font-size: 0.65rem; font-weight: 800;
-    padding: 1px 6px; border-radius: 10px;
+    font-size: 0.55rem; font-weight: 800;
+    padding: 1px 5px; border-radius: 8px;
     display: flex; align-items: center; gap: 2px;
   }
   .marker-badge-bottom {
-    position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
     background: #1e293b; color: #f59e0b;
-    font-size: 0.6rem; font-weight: 700;
-    padding: 1px 5px; border-radius: 8px;
+    font-size: 0.55rem; font-weight: 700;
+    padding: 1px 4px; border-radius: 6px;
     border: 1px solid rgba(255,255,255,0.1);
     white-space: nowrap;
   }
 
-  /* Bottom Floating Actions UI */
+  /* Bottom Floating Actions UI - Compact & Scaled */
   .bottom-actions {
-    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
     z-index: 10;
-    display: flex; gap: 10px;
+    display: flex; gap: 8px;
     background: rgba(10, 15, 26, 0.85);
     backdrop-filter: blur(16px);
-    padding: 8px;
-    border-radius: 28px;
+    padding: 6px;
+    border-radius: 22px;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
   }
   .action-btn {
-    width: 80px; height: 68px;
-    border-radius: 20px;
+    width: 68px; height: 50px;
+    border-radius: 16px;
     border: none;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; color: #000; font-weight: 700; font-size: 0.72rem;
+    gap: 2px; color: #000; font-weight: 700; font-size: 0.65rem;
     cursor: pointer; transition: transform 0.2s;
   }
   .action-btn:active { transform: scale(0.95); }
-  .btn-cyan { background: var(--cyan); box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3); }
-  .btn-purple { background: var(--purple); color: #fff; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); }
+  .btn-cyan { background: var(--cyan); box-shadow: 0 3px 12px rgba(0, 210, 255, 0.3); }
+  .btn-purple { background: var(--purple); color: #fff; box-shadow: 0 3px 12px rgba(168, 85, 247, 0.3); }
   .btn-dark { background: rgba(30, 41, 59, 0.9); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
-  .btn-icon { font-size: 1.2rem; }
+  .btn-icon { font-size: 1rem; }
+
+  /* Gemini AI Chat Window */
+  #ai-window { 
+    position: fixed; bottom: 72px; right: 12px; left: 12px; max-width: 360px; margin: 0 auto;
+    background: rgba(18, 26, 38, 0.95); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; 
+    display: none; flex-direction: column; overflow: hidden; z-index: 100; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+  }
+  #ai-header { background: rgba(30, 41, 59, 0.9); padding: 12px; font-weight: 600; display: flex; justify-content: space-between; font-size: 0.85rem; }
+  #ai-chat { padding: 12px; height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem; }
+  .msg-ai { background: rgba(30, 41, 59, 0.9); padding: 8px 12px; border-radius: 10px; border-bottom-left-radius: 2px; line-height: 1.4;}
+  .msg-user { background: #ffffff; color: #000; padding: 8px 12px; border-radius: 10px; border-bottom-right-radius: 2px; align-self: flex-end; }
+  #ai-input-area { display: flex; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.9);}
+  #ai-input { flex: 1; background: transparent; border: none; padding: 10px 12px; color: white; outline: none; font-family: inherit; font-size: 0.8rem;}
+  #ai-send { background: transparent; border: none; color: var(--cyan); padding: 0 12px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
 
   /* Custom Popup Modal styling */
   .leaflet-popup-content-wrapper {
     background: rgba(15, 23, 42, 0.95) !important;
     backdrop-filter: blur(12px);
     color: #fff !important;
-    border-radius: 16px !important;
+    border-radius: 14px !important;
     border: 1px solid rgba(255,255,255,0.15);
     box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
   }
   .leaflet-popup-tip { background: rgba(15, 23, 42, 0.95) !important; }
-  .popup-title { font-size: 1rem; font-weight: bold; margin-bottom: 4px; }
-  .popup-sub { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; }
-  .popup-tags { display: flex; gap: 6px; font-size: 0.7rem; }
-  .popup-tag { background: rgba(255,255,255,0.1); padding: 3px 6px; border-radius: 6px; }
+  .popup-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 2px; }
+  .popup-sub { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 6px; }
+  .popup-tags { display: flex; gap: 4px; font-size: 0.65rem; }
+  .popup-tag { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -220,10 +236,25 @@
     <span class="btn-icon">⚡</span>
     <span>Nearest Quiet</span>
   </button>
-  <button class="action-btn btn-dark" onclick="dropPin()">
-    <span class="btn-icon">📍</span>
-    <span>Drop Pin</span>
+  <button class="action-btn btn-dark" onclick="toggleAI()">
+    <span class="btn-icon">✨</span>
+    <span>AI Chat</span>
   </button>
+</div>
+
+<!-- Gemini AI Chat Window -->
+<div id="ai-window">
+  <div id="ai-header">
+    <span>Spotly AI Guide</span>
+    <span style="cursor:pointer; color:#a1a1aa;" onclick="toggleAI()">✕</span>
+  </div>
+  <div id="ai-chat">
+    <div class="msg-ai">Hey! Looking for biriyani spots, study cafes, or quiet hangouts in Kottayam? Ask me!</div>
+  </div>
+  <div id="ai-input-area">
+    <input type="text" id="ai-input" placeholder="Ask about Kottayam spots...">
+    <button id="ai-send" onclick="sendToGemini()">Send</button>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -236,11 +267,10 @@
     { name: "Third Place", lat: 9.5850, lng: 76.5200, icon: "📚", crowd: 4, net: "5G", quiet: true },
     { name: "12 to 12 Barbeque", lat: 9.5875, lng: 76.5245, icon: "🏟️", crowd: 18, net: "5G", quiet: false },
     { name: "Wheels & Brews", lat: 9.5920, lng: 76.5310, icon: "🌲", crowd: 2, net: "5G", quiet: true },
-    { name: "Urban Chai", lat: 9.5880, lng: 76.5350, cat: "Tea Spot", icon: "☕", crowd: 3, net: "5G", quiet: true }
+    { name: "Urban Chai", lat: 9.5880, lng: 76.5350, icon: "☕", crowd: 3, net: "5G", quiet: true }
   ];
 
   function initMap() {
-    // Dark Map Tiles matching prototype
     map = L.map('map', { zoomControl: false }).setView([9.5890, 76.5280], 14);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -261,8 +291,8 @@
       const customIcon = L.divIcon({
         html: markerHtml,
         className: '',
-        iconSize: [44, 44],
-        iconAnchor: [22, 22]
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       });
 
       const popupContent = `
@@ -292,16 +322,33 @@
     }
   }
 
-  function dropPin() {
-    const center = map.getCenter();
-    const markerHtml = `
-      <div class="spot-marker">
-        <div class="marker-badge-top">NEW</div>
-        <span>📍</span>
-      </div>
-    `;
-    const icon = L.divIcon({ html: markerHtml, className: '', iconSize: [44, 44], iconAnchor: [22, 22] });
-    L.marker([center.lat, center.lng], { icon: icon }).addTo(map).bindPopup("Custom Spot Dropped").openPopup();
+  function toggleAI() {
+    const w = document.getElementById('ai-window');
+    w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
+  }
+
+  async function sendToGemini() {
+    const inputField = document.getElementById('ai-input');
+    const text = inputField.value.trim();
+    if (!text) return;
+
+    const chat = document.getElementById('ai-chat');
+    chat.innerHTML += `<div class="msg-user">${text}</div>`;
+    inputField.value = '';
+    chat.scrollTop = chat.scrollHeight;
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text })
+      });
+      const data = await response.json();
+      chat.innerHTML += `<div class="msg-ai">${data.reply}</div>`;
+    } catch (err) {
+      chat.innerHTML += `<div class="msg-ai" style="color:#ef4444;">Error connecting to API endpoint.</div>`;
+    }
+    chat.scrollTop = chat.scrollHeight;
   }
 
   window.onload = initMap;
