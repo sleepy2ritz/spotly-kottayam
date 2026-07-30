@@ -1,21 +1,31 @@
-// server.js (Node.js Backend for Google Cloud Run)
-// This securely holds the Gemini API Key and communicates with the frontend.
 import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Set this environment variable in your Cloud Run settings
+// Serve static files (like index.html) from the root directory
+app.use(express.static(__dirname));
+
+// Serve index.html when visiting the root path "/"
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Gemini AI Chat API Endpoint
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 
 app.post('/api/chat', async (req, res) => {
     try {
         const { prompt } = req.body;
         
-        // System instructions to keep Gemini focused on Kottayam Gen-Z spots
         const systemPrompt = `You are a location assistant for Spotly, embedded in Kottayam town, Kerala. 
         Focus strictly on recommending cafes, biriyani spots (like Nahdi Kuzhimandi, Calicut Cafe), 
         and hangouts. Answer casually and keep it under 3 sentences. User question: ${prompt}`;
