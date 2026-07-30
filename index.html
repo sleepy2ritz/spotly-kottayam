@@ -1,357 +1,854 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Spotly - Kottayam Edition</title>
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>
-  :root { 
-    --bg-dark: #0b0f17; 
-    --card-bg: rgba(18, 26, 38, 0.85); 
-    --cyan: #00d2ff;
-    --purple: #a855f7;
-    --green: #10b981;
-    --text: #f4f4f5; 
-    --text-muted: #9ca3af; 
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spotly — Study & Quiet Spot Finder</title>
   
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg-dark); 
-    color: var(--text); 
-    height: 100vh; 
-    width: 100vw;
-    overflow: hidden; 
-    position: relative;
-  }
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --card-bg: rgba(18, 26, 38, 0.88);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --accent-blue: #00d2ff;
+      --accent-green: #10b981;
+      --accent-red: #f43f5e;
+      --accent-purple: #a855f7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
 
-  /* Full Screen Map */
-  #map { 
-    position: absolute; 
-    top: 0; left: 0; width: 100%; height: 100%; 
-    z-index: 1; 
-    background: #090d14;
-  }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { display: flex; flex-direction: column; height: 100vh; width: 100vw; background-color: var(--bg-main); color: var(--text-main); overflow: hidden; position: relative; }
 
-  /* Header Bar Overlay */
-  .top-header {
-    position: absolute; top: 10px; left: 10px; right: 10px;
-    z-index: 10;
-    display: flex; justify-content: space-between; align-items: center;
-    pointer-events: none;
-  }
-  .top-header * { pointer-events: auto; }
+    /* Top Glass Header */
+    header { 
+      background: var(--card-bg); 
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 10px 16px; 
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+    }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .brand-logo { font-size: 1.15rem; font-weight: 800; color: var(--accent-blue); letter-spacing: -0.5px; }
+    .region-select {
+      background: rgba(0, 210, 255, 0.12);
+      color: var(--accent-blue);
+      border: 1px solid rgba(0, 210, 255, 0.3);
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+    }
 
-  .brand-pill {
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    padding: 4px 10px;
-    border-radius: 16px;
-    display: flex; align-items: center; gap: 6px;
-    font-weight: 700; font-size: 0.85rem;
-  }
-  .edition-badge {
-    background: rgba(0, 210, 255, 0.15);
-    color: var(--cyan);
-    font-size: 0.6rem;
-    padding: 2px 6px;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 210, 255, 0.3);
-  }
+    /* HUD Badge & Noise Meter */
+    .hud-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .db-value { color: var(--accent-blue); font-weight: 800; }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-blue);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-blue);
+      transition: background-color 0.3s ease;
+    }
 
-  .mic-indicator {
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    padding: 4px 10px;
-    border-radius: 16px;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    display: flex; align-items: center; gap: 5px;
-  }
-  .dot-glow { width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; box-shadow: 0 0 6px var(--cyan); }
+    /* Filter Toolbar */
+    .toolbar {
+      background: rgba(11, 15, 25, 0.92);
+      backdrop-filter: blur(10px);
+      padding: 8px 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 999;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .toolbar::-webkit-scrollbar { display: none; }
+    .search-input {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      outline: none;
+      min-width: 130px;
+    }
+    .search-input::placeholder { color: var(--text-muted); }
+    .filter-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-chip.active {
+      background: var(--accent-blue);
+      color: #0b0f19;
+      border-color: var(--accent-blue);
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
+    }
 
-  /* Floating Filter Scrollbar - Scaled down */
-  .filter-bar {
-    position: absolute; top: 48px; left: 10px; right: 10px;
-    z-index: 10;
-    display: flex; gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-  }
-  .filter-bar::-webkit-scrollbar { display: none; }
+    /* Map Box */
+    #map { flex: 1; width: 100%; z-index: 1; background: var(--bg-main); }
 
-  .search-pill {
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 5px 10px;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    display: flex; align-items: center; gap: 4px;
-    white-space: nowrap;
-  }
-  .filter-chip {
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 5px 10px;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: 0.2s;
-  }
-  .filter-chip.active {
-    background: var(--cyan);
-    color: #000;
-    font-weight: 600;
-    border-color: var(--cyan);
-    box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
-  }
+    /* Floating Action Controls */
+    .action-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 999;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 8px;
+      border-radius: 28px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+    }
+    .btn {
+      border: none;
+      padding: 10px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-1px); }
+    .btn-mic { background: var(--accent-blue); color: #0b0f19; box-shadow: 0 4px 12px rgba(0, 210, 255, 0.3); }
+    .btn-mic.active { background: var(--accent-red); color: #fff; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); }
+    .btn-nearest { background: var(--accent-purple); color: #ffffff; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); }
+    .btn-drop { background: rgba(30, 41, 59, 0.9); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .btn-chat-toggle { background: linear-gradient(135deg, #a855f7, #00d2ff); color: #fff; }
 
-  /* Custom Glowing Map Markers - Scaled down */
-  .spot-marker {
-    position: relative;
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: rgba(15, 23, 42, 0.9);
-    border: 2px solid var(--cyan);
-    box-shadow: 0 0 12px rgba(0, 210, 255, 0.4), inset 0 0 8px rgba(0, 210, 255, 0.2);
-    display: flex; justify-content: center; align-items: center;
-    font-size: 1rem;
-  }
-  .spot-marker.crowded {
-    border-color: #ef4444;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
-  }
-  .marker-badge-top {
-    position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
-    background: var(--cyan); color: #000;
-    font-size: 0.55rem; font-weight: 800;
-    padding: 1px 5px; border-radius: 8px;
-    display: flex; align-items: center; gap: 2px;
-  }
-  .marker-badge-bottom {
-    position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
-    background: #1e293b; color: #f59e0b;
-    font-size: 0.55rem; font-weight: 700;
-    padding: 1px 4px; border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.1);
-    white-space: nowrap;
-  }
+    /* Glass Info Card Panel */
+    .card {
+      position: absolute;
+      bottom: 85px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      width: calc(100% - 32px);
+      max-width: 420px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 18px;
+      border-radius: 24px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card.active {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+    .card-logo-container { display: flex; align-items: center; gap: 12px; }
+    .card-logo-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid var(--accent-blue);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      box-shadow: 0 0 12px rgba(0, 210, 255, 0.25);
+    }
+    .card-logo-btn:hover { transform: scale(1.08); }
 
-  /* Bottom Floating Actions UI - Compact & Scaled */
-  .bottom-actions {
-    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-    z-index: 10;
-    display: flex; gap: 8px;
-    background: rgba(10, 15, 26, 0.85);
-    backdrop-filter: blur(16px);
-    padding: 6px;
-    border-radius: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-  }
-  .action-btn {
-    width: 68px; height: 50px;
-    border-radius: 16px;
-    border: none;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px; color: #000; font-weight: 700; font-size: 0.65rem;
-    cursor: pointer; transition: transform 0.2s;
-  }
-  .action-btn:active { transform: scale(0.95); }
-  .btn-cyan { background: var(--cyan); box-shadow: 0 3px 12px rgba(0, 210, 255, 0.3); }
-  .btn-purple { background: var(--purple); color: #fff; box-shadow: 0 3px 12px rgba(168, 85, 247, 0.3); }
-  .btn-dark { background: rgba(30, 41, 59, 0.9); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
-  .btn-icon { font-size: 1rem; }
+    .card-title { font-size: 1rem; font-weight: 700; color: var(--text-main); line-height: 1.2; }
+    .card-tag { font-size: 0.65rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    .tag-quiet { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tag-noisy { background: rgba(244, 63, 94, 0.15); color: var(--accent-red); border: 1px solid rgba(244, 63, 94, 0.3); }
+    
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+    .meta-item { display: flex; flex-direction: column; }
+    .meta-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 500; margin-bottom: 2px; }
+    .meta-value { font-size: 0.8rem; font-weight: 600; color: var(--text-main); }
+    .highlight-people { color: var(--accent-blue); font-weight: 800; }
+    .ai-pop-badge { color: var(--accent-purple); font-weight: 800; }
 
-  /* Gemini AI Chat Window */
-  #ai-window { 
-    position: fixed; bottom: 72px; right: 12px; left: 12px; max-width: 360px; margin: 0 auto;
-    background: rgba(18, 26, 38, 0.95); backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; 
-    display: none; flex-direction: column; overflow: hidden; z-index: 100; 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
-  }
-  #ai-header { background: rgba(30, 41, 59, 0.9); padding: 12px; font-weight: 600; display: flex; justify-content: space-between; font-size: 0.85rem; }
-  #ai-chat { padding: 12px; height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem; }
-  .msg-ai { background: rgba(30, 41, 59, 0.9); padding: 8px 12px; border-radius: 10px; border-bottom-left-radius: 2px; line-height: 1.4;}
-  .msg-user { background: #ffffff; color: #000; padding: 8px 12px; border-radius: 10px; border-bottom-right-radius: 2px; align-self: flex-end; }
-  #ai-input-area { display: flex; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.9);}
-  #ai-input { flex: 1; background: transparent; border: none; padding: 10px 12px; color: white; outline: none; font-family: inherit; font-size: 0.8rem;}
-  #ai-send { background: transparent; border: none; color: var(--cyan); padding: 0 12px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+    .gmaps-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      background: linear-gradient(135deg, #4285f4, #1a73e8);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
 
-  /* Custom Popup Modal styling */
-  .leaflet-popup-content-wrapper {
-    background: rgba(15, 23, 42, 0.95) !important;
-    backdrop-filter: blur(12px);
-    color: #fff !important;
-    border-radius: 14px !important;
-    border: 1px solid rgba(255,255,255,0.15);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
-  }
-  .leaflet-popup-tip { background: rgba(15, 23, 42, 0.95) !important; }
-  .popup-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 2px; }
-  .popup-sub { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 6px; }
-  .popup-tags { display: flex; gap: 4px; font-size: 0.65rem; }
-  .popup-tag { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; }
-</style>
+    /* Custom Glowing Map Markers */
+    .spot-marker {
+      position: relative;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.95);
+      border: 2px solid var(--accent-blue);
+      box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
+      display: flex; justify-content: center; align-items: center;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .spot-marker.crowded {
+      border-color: var(--accent-red);
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.5);
+    }
+    .marker-badge-top {
+      position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+      background: var(--accent-blue); color: #000;
+      font-size: 0.6rem; font-weight: 800;
+      padding: 1px 5px; border-radius: 8px;
+      white-space: nowrap;
+    }
+    .marker-badge-bottom {
+      position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: #f59e0b;
+      font-size: 0.58rem; font-weight: 700;
+      padding: 1px 5px; border-radius: 6px;
+      border: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .gps-marker-pulse {
+      width: 16px;
+      height: 16px;
+      background-color: var(--accent-blue);
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-blue);
+      animation: pulse-ring 1.8s infinite;
+    }
+
+    /* AI Chatbot Overlay Window */
+    .chat-window {
+      position: absolute;
+      bottom: 85px;
+      right: 16px;
+      width: 340px;
+      height: 440px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .chat-window.active { opacity: 1; visibility: visible; transform: translateY(0); }
+    
+    .chat-header {
+      background: rgba(15, 23, 42, 0.95);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .chat-title { font-size: 0.85rem; font-weight: 700; color: var(--accent-blue); display: flex; align-items: center; gap: 6px; }
+    .chat-actions { display: flex; gap: 6px; align-items: center; }
+    .api-btn {
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: var(--accent-purple);
+      font-size: 0.65rem; font-weight: 700;
+      padding: 3px 8px; border-radius: 10px; cursor: pointer;
+    }
+    .chat-close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; }
+    
+    .api-drawer {
+      background: rgba(15, 23, 42, 0.98);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 12px; display: none; flex-direction: column; gap: 6px;
+    }
+    .api-drawer.active { display: flex; }
+    .api-input {
+      background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-color);
+      color: var(--text-main); padding: 6px 10px; border-radius: 8px; font-size: 0.72rem; outline: none;
+    }
+    
+    .chat-body { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-bubble { max-width: 88%; padding: 10px 14px; border-radius: 16px; font-size: 0.78rem; line-height: 1.45; }
+    .chat-bubble.bot {
+      background: rgba(0, 210, 255, 0.12); border: 1px solid rgba(0, 210, 255, 0.25);
+      color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px;
+    }
+    .chat-bubble.user {
+      background: var(--accent-purple); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600;
+    }
+
+    .prompt-chips {
+      display: flex; gap: 6px; padding: 6px 12px; overflow-x: auto;
+      background: rgba(11, 15, 25, 0.6); border-top: 1px solid var(--border-color); white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .prompt-chips::-webkit-scrollbar { display: none; }
+    .chip-btn {
+      background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color);
+      color: var(--accent-blue); padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; cursor: pointer;
+    }
+
+    .chat-footer { padding: 8px; background: rgba(15, 23, 42, 0.95); display: flex; gap: 6px; border-top: 1px solid var(--border-color); }
+    .chat-input {
+      flex: 1; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-color);
+      color: var(--text-main); padding: 8px 12px; border-radius: 12px; font-size: 0.78rem; outline: none;
+    }
+    .chat-send-btn { background: var(--accent-blue); color: #0b0f19; border: none; padding: 0 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+    .toast {
+      position: fixed; top: 105px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      background: var(--card-bg); border: 1px solid var(--accent-blue); color: var(--text-main);
+      padding: 8px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 2000; opacity: 0; pointer-events: none; transition: all 0.3s ease;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7); }
+      70% { box-shadow: 0 0 0 12px rgba(0, 210, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); }
+    }
+  </style>
 </head>
 <body>
 
-<div class="top-header">
-  <div class="brand-pill">
-    📍 spotly <span class="edition-badge">Kottayam</span>
+  <header>
+    <div class="brand">
+      <div class="brand-logo">📍 spotly</div>
+      <select class="region-select" id="regionSelect" onchange="switchRegion(this.value)">
+        <option value="iitm">IIT Madras</option>
+        <option value="kottayam">Kottayam</option>
+      </select>
+    </div>
+    <div class="hud-badge">
+      <div class="pulse-dot"></div>
+      <span>Mic: <span id="liveDbDisplay" class="db-value">-- dB</span></span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search spot..." oninput="renderMarkers()">
+    <button class="filter-chip active" onclick="setFilter('all', this)">All Spots</button>
+    <button class="filter-chip" onclick="setFilter('quiet', this)">🍃 Quiet (&lt;35dB)</button>
+    <button class="filter-chip" onclick="setFilter('power', this)">⚡ Power Plugs</button>
+    <button class="filter-chip" onclick="setFilter('ac', this)">❄️ AC Spots</button>
   </div>
-  <div class="mic-indicator">
-    <div class="dot-glow"></div> Mic: <span id="mic-db">-- dB</span>
-  </div>
-</div>
 
-<div class="filter-bar">
-  <div class="search-pill">🔍 Search spot...</div>
-  <div class="filter-chip active">All Spots</div>
-  <div class="filter-chip">🍃 Quiet (&lt;35dB)</div>
-  <div class="filter-chip">⚡ Power Outlets</div>
-  <div class="filter-chip">☕ Cafes</div>
-</div>
+  <div id="map"></div>
 
-<div id="map"></div>
+  <div class="toast" id="toast">Check-in logged!</div>
 
-<div class="bottom-actions">
-  <button class="action-btn btn-cyan" onclick="toggleMic()">
-    <span class="btn-icon">🎙️</span>
-    <span>Mic Meter</span>
-  </button>
-  <button class="action-btn btn-purple" onclick="findNearestQuiet()">
-    <span class="btn-icon">⚡</span>
-    <span>Nearest Quiet</span>
-  </button>
-  <button class="action-btn btn-dark" onclick="toggleAI()">
-    <span class="btn-icon">✨</span>
-    <span>AI Chat</span>
-  </button>
-</div>
-
-<!-- Gemini AI Chat Window -->
-<div id="ai-window">
-  <div id="ai-header">
-    <span>Spotly AI Guide</span>
-    <span style="cursor:pointer; color:#a1a1aa;" onclick="toggleAI()">✕</span>
-  </div>
-  <div id="ai-chat">
-    <div class="msg-ai">Hey! Looking for biriyani spots, study cafes, or quiet hangouts in Kottayam? Ask me!</div>
-  </div>
-  <div id="ai-input-area">
-    <input type="text" id="ai-input" placeholder="Ask about Kottayam spots...">
-    <button id="ai-send" onclick="sendToGemini()">Send</button>
-  </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-  let map;
-
-  const spots = [
-    { name: "Nahdi Kuzhimandi", lat: 9.5841, lng: 76.5273, icon: "🍔", crowd: 28, net: "5G", quiet: false },
-    { name: "Tonico Cafe", lat: 9.5962, lng: 76.5414, icon: "💻", crowd: 2, net: "5G", quiet: true },
-    { name: "Third Place", lat: 9.5850, lng: 76.5200, icon: "📚", crowd: 4, net: "5G", quiet: true },
-    { name: "12 to 12 Barbeque", lat: 9.5875, lng: 76.5245, icon: "🏟️", crowd: 18, net: "5G", quiet: false },
-    { name: "Wheels & Brews", lat: 9.5920, lng: 76.5310, icon: "🌲", crowd: 2, net: "5G", quiet: true },
-    { name: "Urban Chai", lat: 9.5880, lng: 76.5350, icon: "☕", crowd: 3, net: "5G", quiet: true }
-  ];
-
-  function initMap() {
-    map = L.map('map', { zoomControl: false }).setView([9.5890, 76.5280], 14);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap &copy; CARTO'
-    }).addTo(map);
-
-    spots.forEach(spot => {
-      const isCrowded = spot.crowd > 15;
-      const markerHtml = `
-        <div class="spot-marker ${isCrowded ? 'crowded' : ''}">
-          <div class="marker-badge-top">👥 ${spot.crowd}</div>
-          <span>${spot.icon}</span>
-          <div class="marker-badge-bottom">📶 ${spot.net}</div>
+  <!-- Spot Detail Glass Card -->
+  <div class="card" id="spotCard">
+    <div class="card-header">
+      <div class="card-logo-container">
+        <button class="card-logo-btn" id="cardLogoBtn" title="Tap logo to check-in (+1 person)" onclick="incrementCurrentSpotPeople()">
+          <span id="cardLogoIcon">📚</span>
+        </button>
+        <div>
+          <div class="card-title" id="cardName">Select a spot</div>
+          <span style="font-size: 0.68rem; color: var(--text-muted);" id="cardDistance">📍 Calculating...</span>
         </div>
-      `;
+      </div>
+      <span class="card-tag tag-quiet" id="cardTag">QUIET</span>
+    </div>
 
-      const customIcon = L.divIcon({
-        html: markerHtml,
-        className: '',
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
-      });
+    <div class="card-grid">
+      <div class="meta-item">
+        <span class="meta-label">Live Check-ins</span>
+        <span class="meta-value highlight-people" id="cardPeopleCount">👥 0 people</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">🤖 AI Est. Crowd</span>
+        <span class="meta-value ai-pop-badge" id="cardAiPopulation">~0 people</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Noise Level</span>
+        <span class="meta-value" id="cardNoise">--</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Network Speed</span>
+        <span class="meta-value" id="cardNet">📶 --</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Category</span>
+        <span class="meta-value" id="cardCategory">--</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Power Outlets</span>
+        <span class="meta-value" id="cardOutlets">⚡ Yes</span>
+      </div>
+    </div>
 
-      const popupContent = `
-        <div class="popup-title">${spot.name}</div>
-        <div class="popup-sub">${spot.quiet ? '🍃 Quiet Spot' : '🔥 Busy Spot'}</div>
-        <div class="popup-tags">
-          <span class="popup-tag">👥 ${spot.crowd} People</span>
-          <span class="popup-tag">📶 ${spot.net}</span>
-        </div>
-      `;
+    <button class="gmaps-btn" id="gmapsBtn" onclick="openGoogleMapsDirections()">
+      🗺️ Navigate with Google Maps
+    </button>
+  </div>
 
-      L.marker([spot.lat, spot.lng], { icon: customIcon })
-        .addTo(map)
-        .bindPopup(popupContent);
+  <!-- AI Chat Window -->
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div class="chat-title">🤖 SpotBot AI</div>
+      <div class="chat-actions">
+        <button class="api-btn" onclick="toggleApiDrawer()">🔑 API Key</button>
+        <button class="chat-close-btn" onclick="toggleChatWindow()">✕</button>
+      </div>
+    </div>
+
+    <div class="api-drawer" id="apiDrawer">
+      <span style="font-size: 0.68rem; color: var(--text-muted);">Gemini Key (for online LLM):</span>
+      <input type="password" id="geminiApiKeyInput" class="api-input" placeholder="AIzaSy..." onchange="saveApiKey()">
+    </div>
+
+    <div class="chat-body" id="chatBody">
+      <div class="chat-bubble bot">
+        Yo! I'm **SpotBot** 🤖 Ask me for quiet study nooks, cafe plugs, or crowded spot warnings!
+      </div>
+    </div>
+    
+    <div class="prompt-chips">
+      <button class="chip-btn" onclick="quickAsk('Where can I charge my laptop?')">⚡ Power Plugs</button>
+      <button class="chip-btn" onclick="quickAsk('Find me the quietest spot')">🍃 Quietest Spot</button>
+      <button class="chip-btn" onclick="quickAsk('Which spots have AC?')">❄️ AC Spots</button>
+    </div>
+
+    <div class="chat-footer">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Ask e.g. 'Quietest cafe nearby?'" onkeydown="if(event.key === 'Enter') sendChatMessage()">
+      <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Floating Action Toolbar -->
+  <div class="action-bar">
+    <button class="btn btn-mic" id="micBtnToggle" onclick="toggleMic()">🎙️ Mic Meter</button>
+    <button class="btn btn-nearest" onclick="findNearestQuietSpot()">⚡ Nearest Quiet</button>
+    <button class="btn btn-drop" onclick="dropPin()">📍 Drop Pin</button>
+    <button class="btn btn-chat-toggle" onclick="toggleChatWindow()">💬 AI</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <script>
+    // Region Datasets
+    const regions = {
+      iitm: {
+        center: [12.9915, 80.2337],
+        zoom: 16,
+        spots: [
+          { id: "iitm_1", name: "Central Library Reading Hall", lat: 12.9902, lng: 80.2325, noise: 28, isQuiet: true, peopleCount: 4, icon: "📚", category: "Silent Library", outlets: "⚡ High (Desk Plugs)", network: "Jio 5G / Airtel 5G", netBadge: "5G", hasAC: true, hasPower: true },
+          { id: "iitm_2", name: "Biotech Dept Lawns", lat: 12.9930, lng: 80.2350, noise: 32, isQuiet: true, peopleCount: 2, icon: "🌳", category: "Shaded Garden", outlets: "❌ Limited", network: "Airtel 5G", netBadge: "5G", hasAC: false, hasPower: false },
+          { id: "iitm_3", name: "Gajendra Circle Woods", lat: 12.9915, lng: 80.2337, noise: 34, isQuiet: true, peopleCount: 1, icon: "🌲", category: "Nature Area", outlets: "❌ None", network: "Jio 5G", netBadge: "4G+", hasAC: false, hasPower: false },
+          { id: "iitm_4", name: "CRC 3rd Floor Quiet Corner", lat: 12.9892, lng: 80.2330, noise: 30, isQuiet: true, peopleCount: 3, icon: "🏫", category: "Academic Zone", outlets: "⚡ Plugs Available", network: "Jio 5G", netBadge: "5G", hasAC: true, hasPower: true },
+          { id: "iitm_5", name: "Quark Atrium Study Nook", lat: 12.9898, lng: 80.2341, noise: 31, isQuiet: true, peopleCount: 5, icon: "🔬", category: "Academic Hub", outlets: "⚡ Dedicated Desk Plugs", network: "Jio 5G", netBadge: "5G", hasAC: true, hasPower: true },
+          { id: "iitm_6", name: "Manohar C. Watsa Stadium", lat: 12.9870, lng: 80.2360, noise: 82, isQuiet: false, peopleCount: 18, icon: "🏟️", category: "Sports Stadium", outlets: "❌ None", network: "Jio 5G", netBadge: "5G", hasAC: false, hasPower: false },
+          { id: "iitm_7", name: "Himalaya Mess Complex", lat: 12.9880, lng: 80.2305, noise: 74, isQuiet: false, peopleCount: 28, icon: "🍔", category: "Crowded Hub", outlets: "⚡ Moderate", network: "All Networks", netBadge: "5G", hasAC: false, hasPower: true }
+        ]
+      },
+      kottayam: {
+        center: [9.5890, 76.5280],
+        zoom: 14,
+        spots: [
+          { id: "ktm_1", name: "Tonico Cafe", lat: 9.5962, lng: 76.5414, noise: 32, isQuiet: true, peopleCount: 2, icon: "💻", category: "Work Cafe", outlets: "⚡ Wall Plugs Available", network: "Jio 5G", netBadge: "5G", hasAC: true, hasPower: true },
+          { id: "ktm_2", name: "Third Place", lat: 9.5850, lng: 76.5200, noise: 30, isQuiet: true, peopleCount: 4, icon: "📚", category: "Library & Study Cafe", outlets: "⚡ Desk Plugs", network: "Airtel 5G", netBadge: "5G", hasAC: true, hasPower: true },
+          { id: "ktm_3", name: "Wheels & Brews", lat: 9.5920, lng: 76.5310, noise: 33, isQuiet: true, peopleCount: 2, icon: "☕", category: "Garden Cafe", outlets: "⚡ Limited", network: "Jio 5G", netBadge: "5G", hasAC: false, hasPower: true },
+          { id: "ktm_4", name: "Nahdi Kuzhimandi", lat: 9.5841, lng: 76.5273, noise: 78, isQuiet: false, peopleCount: 28, icon: "🍔", category: "Busy Eatery", outlets: "❌ None", network: "All Networks", netBadge: "5G", hasAC: true, hasPower: false },
+          { id: "ktm_5", name: "12 to 12 Barbeque", lat: 9.5875, lng: 76.5245, noise: 75, isQuiet: false, peopleCount: 18, icon: "🔥", category: "Crowded Restaurant", outlets: "❌ None", network: "Airtel 5G", netBadge: "5G", hasAC: true, hasPower: false },
+          { id: "ktm_6", name: "Urban Chai", lat: 9.5880, lng: 76.5350, noise: 34, isQuiet: true, peopleCount: 3, icon: "☕", category: "Tea Spot", outlets: "⚡ Plugs Available", network: "Jio 5G", netBadge: "5G", hasAC: false, hasPower: true }
+        ]
+      }
+    };
+
+    let currentRegionKey = 'iitm';
+    let currentSpots = [];
+    let selectedSpotId = null;
+    let activeFilter = 'all';
+
+    // Map & GPS Variables
+    let map = null;
+    let markers = [];
+    let userMarker = null, accuracyCircle = null;
+    let userLat = 12.9915, userLng = 80.2337;
+
+    // Mic & Audio Engine
+    let audioCtx = null, analyser = null, audioStream = null;
+    let isListening = false, animationFrameId = null, currentDbLevel = 35;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadRegion('iitm');
+      startLiveTracking();
+      loadApiKey();
     });
-  }
 
-  function toggleMic() {
-    const val = Math.floor(Math.random() * (42 - 28 + 1)) + 28;
-    document.getElementById('mic-db').innerText = val + ' dB';
-  }
+    function initMap() {
+      map = L.map('map', { zoomControl: false }).setView(regions.iitm.center, regions.iitm.zoom);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
-  function findNearestQuiet() {
-    const quietSpot = spots.find(s => s.quiet);
-    if (quietSpot) {
-      map.flyTo([quietSpot.lat, quietSpot.lng], 16, { duration: 1.5 });
-    }
-  }
-
-  function toggleAI() {
-    const w = document.getElementById('ai-window');
-    w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
-  }
-
-  async function sendToGemini() {
-    const inputField = document.getElementById('ai-input');
-    const text = inputField.value.trim();
-    if (!text) return;
-
-    const chat = document.getElementById('ai-chat');
-    chat.innerHTML += `<div class="msg-user">${text}</div>`;
-    inputField.value = '';
-    chat.scrollTop = chat.scrollHeight;
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: text })
+      map.on('click', () => {
+        document.getElementById('spotCard').classList.remove('active');
+        selectedSpotId = null;
       });
-      const data = await response.json();
-      chat.innerHTML += `<div class="msg-ai">${data.reply}</div>`;
-    } catch (err) {
-      chat.innerHTML += `<div class="msg-ai" style="color:#ef4444;">Error connecting to API endpoint.</div>`;
     }
-    chat.scrollTop = chat.scrollHeight;
-  }
 
-  window.onload = initMap;
-</script>
+    function switchRegion(regionKey) {
+      loadRegion(regionKey);
+    }
+
+    function loadRegion(regionKey) {
+      currentRegionKey = regionKey;
+      const reg = regions[regionKey];
+      currentSpots = reg.spots;
+      map.flyTo(reg.center, reg.zoom, { duration: 1.2 });
+      renderMarkers();
+    }
+
+    function startLiveTracking() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+          const userLatLng = [userLat, userLng];
+
+          if (accuracyCircle) accuracyCircle.setLatLng(userLatLng);
+          else accuracyCircle = L.circle(userLatLng, { radius: pos.coords.accuracy, color: '#00d2ff', fillColor: '#00d2ff', fillOpacity: 0.15, weight: 1 }).addTo(map);
+
+          if (userMarker) userMarker.setLatLng(userLatLng);
+          else userMarker = L.marker(userLatLng, { icon: L.divIcon({ className: 'gps-marker-pulse', iconSize: [16, 16], iconAnchor: [8, 8] }) }).addTo(map);
+
+          if (selectedSpotId) updateDistanceDisplay();
+        },
+        () => {},
+        { enableHighAccuracy: true }
+      );
+    }
+
+    function setFilter(type, el) {
+      activeFilter = type;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderMarkers();
+    }
+
+    function renderMarkers() {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      const query = document.getElementById('searchInput').value.toLowerCase();
+
+      currentSpots.forEach(spot => {
+        const matchesSearch = spot.name.toLowerCase().includes(query) || spot.category.toLowerCase().includes(query);
+        let matchesFilter = true;
+
+        if (activeFilter === 'quiet') matchesFilter = spot.isQuiet && spot.noise < 35;
+        if (activeFilter === 'power') matchesFilter = spot.hasPower;
+        if (activeFilter === 'ac') matchesFilter = spot.hasAC;
+
+        if (!matchesSearch || !matchesFilter) return;
+
+        const isCrowded = !spot.isQuiet;
+        const markerHtml = `
+          <div class="spot-marker ${isCrowded ? 'crowded' : ''}">
+            <div class="marker-badge-top">👥 ${spot.peopleCount}</div>
+            <span>${spot.icon}</span>
+            <div class="marker-badge-bottom">📶 ${spot.netBadge}</div>
+          </div>
+        `;
+
+        const customIcon = L.divIcon({ html: markerHtml, className: '', iconSize: [44, 44], iconAnchor: [22, 22] });
+        const marker = L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map);
+
+        marker.on('click', (e) => {
+          L.DomEvent.stopPropagation(e);
+          openSpotCard(spot);
+        });
+
+        markers.push(marker);
+      });
+    }
+
+    function openSpotCard(spot) {
+      selectedSpotId = spot.id;
+      document.getElementById('spotCard').classList.add('active');
+      document.getElementById('cardLogoIcon').innerText = spot.icon;
+      document.getElementById('cardName').innerText = spot.name;
+      document.getElementById('cardPeopleCount').innerText = `👥 ${spot.peopleCount} people`;
+      document.getElementById('cardAiPopulation').innerText = `~${Math.round(spot.peopleCount * 1.3)} people`;
+      document.getElementById('cardNoise').innerText = `${spot.noise} dB`;
+      document.getElementById('cardNet').innerText = spot.network;
+      document.getElementById('cardCategory').innerText = spot.category;
+      document.getElementById('cardOutlets').innerText = spot.outlets;
+
+      const tag = document.getElementById('cardTag');
+      tag.innerText = spot.isQuiet ? "QUIET SPOT" : "BUSY / CROWDED";
+      tag.className = spot.isQuiet ? "card-tag tag-quiet" : "card-tag tag-noisy";
+
+      updateDistanceDisplay();
+    }
+
+    function updateDistanceDisplay() {
+      const spot = currentSpots.find(s => s.id === selectedSpotId);
+      if (!spot) return;
+      const distMeters = calculateDistance(userLat, userLng, spot.lat, spot.lng);
+      document.getElementById('cardDistance').innerText = `📍 ${distMeters > 1000 ? (distMeters/1000).toFixed(1) + ' km' : distMeters + ' m'} from your location`;
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI/180, φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180, Δλ = (lon2-lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      return Math.round(R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))));
+    }
+
+    function incrementCurrentSpotPeople() {
+      const spot = currentSpots.find(s => s.id === selectedSpotId);
+      if (spot) {
+        spot.peopleCount += 1;
+        openSpotCard(spot);
+        renderMarkers();
+        showToast(`Checked in at ${spot.name}!`);
+      }
+    }
+
+    function findNearestQuietSpot() {
+      const quietSpots = currentSpots.filter(s => s.isQuiet);
+      if (!quietSpots.length) return;
+
+      let nearest = null, minD = Infinity;
+      quietSpots.forEach(spot => {
+        const d = calculateDistance(userLat, userLng, spot.lat, spot.lng);
+        if (d < minD) { minD = d; nearest = spot; }
+      });
+
+      if (nearest) {
+        map.flyTo([nearest.lat, nearest.lng], 17, { duration: 1.5 });
+        openSpotCard(nearest);
+        showToast(`Nearest quiet: ${nearest.name}`);
+      }
+    }
+
+    function dropPin() {
+      const center = map.getCenter();
+      const newSpot = {
+        id: "custom_" + Date.now(),
+        name: "Pinned Custom Spot",
+        lat: center.lat,
+        lng: center.lng,
+        noise: 30,
+        isQuiet: true,
+        peopleCount: 1,
+        icon: "📍",
+        category: "Custom Pin",
+        outlets: "⚡ Unspecified",
+        network: "5G",
+        netBadge: "5G",
+        hasAC: false,
+        hasPower: true
+      };
+      currentSpots.push(newSpot);
+      renderMarkers();
+      openSpotCard(newSpot);
+      showToast("New pin dropped at map center!");
+    }
+
+    function openGoogleMapsDirections() {
+      const spot = currentSpots.find(s => s.id === selectedSpotId);
+      if (spot) window.open(`https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}&travelmode=walking`, '_blank');
+    }
+
+    // Microphone Noise Engine
+    async function toggleMic() {
+      const btn = document.getElementById('micBtnToggle');
+      if (isListening) {
+        isListening = false;
+        if (audioStream) audioStream.getTracks().forEach(t => t.stop());
+        btn.innerText = "🎙️ Mic Meter";
+        btn.classList.remove('active');
+        document.getElementById('liveDbDisplay').innerText = "-- dB";
+        return;
+      }
+
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 512;
+        audioCtx.createMediaStreamSource(audioStream).connect(analyser);
+
+        btn.innerText = "🔴 Stop Mic";
+        btn.classList.add('active');
+        isListening = true;
+        updateDecibels();
+      } catch (e) {
+        // Fallback simulation if mic permission denied
+        isListening = true;
+        btn.innerText = "🔴 Stop Mic";
+        btn.classList.add('active');
+        simulateDb();
+      }
+    }
+
+    function simulateDb() {
+      if (!isListening) return;
+      currentDbLevel = Math.floor(Math.random() * (45 - 28 + 1)) + 28;
+      document.getElementById('liveDbDisplay').innerText = `${currentDbLevel} dB`;
+      setTimeout(simulateDb, 1000);
+    }
+
+    function updateDecibels() {
+      if (!isListening || !analyser) return;
+      const dataArray = new Float32Array(analyser.fftSize);
+      analyser.getFloatTimeDomainData(dataArray);
+      let sumSquares = 0;
+      for (let i = 0; i < dataArray.length; i++) sumSquares += dataArray[i] * dataArray[i];
+      const rms = Math.sqrt(sumSquares / dataArray.length);
+      let dbFS = rms > 0 ? 20 * Math.log10(rms) : -120;
+      currentDbLevel = Math.round(Math.max(30, Math.min(90, 90 + dbFS)));
+      document.getElementById('liveDbDisplay').innerText = `${currentDbLevel} dB`;
+      animationFrameId = requestAnimationFrame(updateDecibels);
+    }
+
+    // AI Chatbot Logic
+    function toggleChatWindow() { document.getElementById('chatWindow').classList.toggle('active'); }
+    function toggleApiDrawer() { document.getElementById('apiDrawer').classList.toggle('active'); }
+    function saveApiKey() {
+      const key = document.getElementById('geminiApiKeyInput').value.trim();
+      localStorage.setItem('spotly_gemini_key', key);
+      showToast(key ? "Gemini Key Saved!" : "Key cleared");
+    }
+    function loadApiKey() {
+      document.getElementById('geminiApiKeyInput').value = localStorage.getItem('spotly_gemini_key') || '';
+    }
+
+    function quickAsk(text) {
+      document.getElementById('chatInput').value = text;
+      sendChatMessage();
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendChatBubble(text, 'user');
+      input.value = '';
+
+      let reply = await callGeminiOnline(text);
+      if (!reply) reply = fallbackNLP(text);
+
+      appendChatBubble(reply, 'bot');
+    }
+
+    async function callGeminiOnline(query) {
+      const apiKey = localStorage.getItem('spotly_gemini_key');
+      if (!apiKey) return null;
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `You are SpotBot, assistant for Spotly. Active region dataset: ${JSON.stringify(currentSpots)}. Question: ${query}` }] }]
+          })
+        });
+        const data = await res.json();
+        return data.candidates[0].content.parts[0].text;
+      } catch (e) { return null; }
+    }
+
+    function fallbackNLP(q) {
+      const lower = q.toLowerCase();
+      if (lower.includes('power') || lower.includes('plug') || lower.includes('charge')) {
+        const p = currentSpots.find(s => s.hasPower && s.isQuiet);
+        return `⚡ Head over to **${p.name}**! It has reliable power outlets and sits at ~${p.noise} dB.`;
+      }
+      if (lower.includes('quiet') || lower.includes('study')) {
+        const q = [...currentSpots].sort((a,b) => a.noise - b.noise)[0];
+        return `🍃 Quietest spot right now is **${q.name}** at just **${q.noise} dB**!`;
+      }
+      if (lower.includes('ac') || lower.includes('cool')) {
+        const acs = currentSpots.filter(s => s.hasAC).map(s => s.name).join(", ");
+        return `❄️ Air-conditioned spots available: **${acs}**.`;
+      }
+      return `🤖 Ask me about **power plugs ⚡**, **quiet study spots 🍃**, or **AC locations ❄️**!`;
+    }
+
+    function appendChatBubble(msg, type) {
+      const chatBody = document.getElementById('chatBody');
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${type}`;
+      bubble.innerHTML = msg.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      chatBody.appendChild(bubble);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+  </script>
 </body>
 </html>
