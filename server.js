@@ -31,8 +31,8 @@ app.post('/api/chat', async (req, res) => {
         You have deep local knowledge of Kottayam District: from Kanjikuzhy cafes, Nagampadam turfs, Thirunakkara hangouts, Kumarakom backwaters, Pala colleges, and Ettumanoor food spots to quiet libraries and study spaces.
         Provide helpful, ultra-accurate local insights in a friendly, concise manner (under 3 sentences unless requested otherwise).`;
 
-        // Try Gemini 3.5 Flash first, with automatic fallback to Pro if busy
-        const models = ['gemini-1.5-flash', 'gemini-3.5-pro'];
+        // Try Gemini 3.6 Flash first, with automatic fallback to Pro if busy
+        const models = ['gemini-1.5-flash', 'gemini-3.6-pro'];
         let data = null;
         let success = false;
 
