@@ -1,0 +1,241 @@
+<!-- index.html (Frontend Application) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spotly - Kottayam Edition</title>
+<style>
+  :root { 
+    --bg: #09090b; --surface: #18181b; --primary: #10b981; 
+    --text: #f4f4f5; --text-muted: #a1a1aa; 
+  }
+  body { 
+    margin: 0; font-family: 'Inter', system-ui, sans-serif; 
+    background: var(--bg); color: var(--text); height: 100vh; 
+    display: flex; flex-direction: column; overflow: hidden; 
+  }
+  header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 16px 20px; background: var(--bg); border-bottom: 1px solid #27272a; z-index: 10; 
+  }
+  .logo { font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+  .badge { font-size: 0.7rem; background: #27272a; padding: 4px 8px; border-radius: 6px; }
+  .live-status { font-size: 0.85rem; color: var(--primary); display: flex; align-items: center; gap: 6px; font-weight: 500;}
+  .pulse-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: pulse 1.5s infinite; }
+  
+  #map { flex: 1; width: 100%; background: #27272a; }
+  
+  .bottom-panel { 
+    background: var(--surface); padding: 24px; border-top-left-radius: 24px; 
+    border-top-right-radius: 24px; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); 
+    z-index: 10; position: relative; max-height: 40vh; overflow-y: auto; 
+  }
+  .spot-title { font-size: 1.5rem; margin: 0 0 4px 0; }
+  .spot-dist { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; display: flex; gap: 6px; }
+  
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .card { background: #27272a; padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .card-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-val { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  
+  /* Gemini AI Chat UI */
+  #ai-fab { 
+    position: fixed; bottom: 24px; right: 24px; background: #ffffff; 
+    color: #000; border: none; border-radius: 50%; width: 56px; height: 56px; 
+    font-size: 24px; cursor: pointer; box-shadow: 0 4px 20px rgba(255,255,255,0.2); 
+    z-index: 100; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+  }
+  #ai-fab:hover { transform: scale(1.05); }
+  #ai-window { 
+    position: fixed; bottom: 90px; right: 24px; width: 340px; 
+    background: var(--surface); border: 1px solid #3f3f46; border-radius: 16px; 
+    display: none; flex-direction: column; overflow: hidden; z-index: 100; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
+  }
+  #ai-header { background: #27272a; padding: 16px; font-weight: 600; display: flex; justify-content: space-between; font-size: 0.9rem; }
+  #ai-chat { padding: 16px; height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem; }
+  .msg-ai { background: #27272a; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 2px; line-height: 1.4;}
+  .msg-user { background: #ffffff; color: #000; padding: 10px 14px; border-radius: 12px; border-bottom-right-radius: 2px; align-self: flex-end; }
+  #ai-input-area { display: flex; border-top: 1px solid #3f3f46; background: #1f1f22;}
+  #ai-input { flex: 1; background: transparent; border: none; padding: 16px; color: white; outline: none; font-family: inherit;}
+  #ai-send { background: transparent; border: none; color: #fff; padding: 0 20px; cursor: pointer; font-weight: bold; }
+
+  @keyframes pulse { 
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 
+    70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } 
+  }
+</style>
+<!-- Add your Google Maps API Key here -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">📍 spotly <span class="badge">Kottayam Town</span></div>
+  <div class="live-status"><div class="pulse-dot"></div> Live Network / Maps Traffic Active</div>
+</header>
+
+<div id="map"></div>
+
+<div class="bottom-panel">
+  <h2 class="spot-title" id="spot-name">Select a spot on the map</h2>
+  <div class="spot-dist" id="spot-dist">📍 Awaiting selection...</div>
+  
+  <div class="grid">
+    <div class="card">
+      <div class="card-label">Live Crowd</div>
+      <div class="card-val">👥 <span id="crowd-count">--</span> people</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Network / Traffic</div>
+      <div class="card-val">📶 <span id="network-status">--</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Category</div>
+      <div class="card-val">🍽️ <span id="category">--</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Power Outlets</div>
+      <div class="card-val">⚡ <span id="power">--</span></div>
+    </div>
+  </div>
+</div>
+
+<button id="ai-fab" onclick="toggleAI()">✨</button>
+
+<div id="ai-window">
+  <div id="ai-header">
+    <span>Gemini AI Guide</span>
+    <span style="cursor:pointer; color:#a1a1aa;" onclick="toggleAI()">✕</span>
+  </div>
+  <div id="ai-chat">
+    <div class="msg-ai">Hey! Looking for the best biriyani spots or chill Gen-Z cafes in Kottayam? Ask away.</div>
+  </div>
+  <div id="ai-input-area">
+    <input type="text" id="ai-input" placeholder="Ask about spots...">
+    <button id="ai-send" onclick="sendToGemini()">Send</button>
+  </div>
+</div>
+
+<script>
+  let map, userPos;
+  let crowdInterval;
+  
+  // High-traffic Gen-Z & Biriyani spots in Kottayam
+  const spots = [
+    { name: "Nahdi Kuzhimandi", lat: 9.5841, lng: 76.5273, cat: "Biriyani / Mandi", power: "No", baseCrowd: 60 },
+    { name: "Calicut Cafe", lat: 9.5895, lng: 76.5221, cat: "Biriyani / Snacks", power: "Yes", baseCrowd: 45 },
+    { name: "Tonico Cafe", lat: 9.5962, lng: 76.5414, cat: "Premium Cafe", power: "Yes", baseCrowd: 30 },
+    { name: "Third Place", lat: 9.5850, lng: 76.5200, cat: "Coffee / Quiet", power: "Yes", baseCrowd: 15 },
+    { name: "12 to 12 Barbeque", lat: 9.5875, lng: 76.5245, cat: "Grill / Hangout", power: "No", baseCrowd: 55 }
+  ];
+
+  function initMap() {
+    // Center map on Kottayam Town
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: 9.5916, lng: 76.5222 },
+      zoom: 14,
+      disableDefaultUI: true,
+      styles: [
+        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] }
+      ]
+    });
+
+    // 1. Add Google Maps Live Traffic Layer (Provides real-time congestion data)
+    const trafficLayer = new google.maps.TrafficLayer();
+    trafficLayer.setMap(map);
+
+    // 2. Track Current Location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        new google.maps.Marker({
+          position: userPos, map: map,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: "#10b981", fillOpacity: 1, strokeWeight: 2, strokeColor: "white" }
+        });
+      });
+    }
+
+    // 3. Render Spot Markers
+    spots.forEach(spot => {
+      const marker = new google.maps.Marker({
+        position: { lat: spot.lat, lng: spot.lng },
+        map: map, title: spot.name,
+        icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+      });
+      marker.addListener("click", () => renderSpotDetails(spot));
+    });
+  }
+
+  // Real-time calculation simulation based on Maps distance logic & base networking
+  function renderSpotDetails(spot) {
+    document.getElementById('spot-name').innerText = spot.name;
+    document.getElementById('category').innerText = spot.cat;
+    document.getElementById('power').innerText = spot.power;
+    
+    if (userPos) {
+        // Basic distance calculation
+        const dist = Math.sqrt(Math.pow(spot.lat - userPos.lat, 2) + Math.pow(spot.lng - userPos.lng, 2)) * 111; // Approx km
+        document.getElementById('spot-dist').innerText = `📍 ${dist.toFixed(1)} km away`;
+    }
+
+    clearInterval(crowdInterval);
+    updateRealTimeData(spot);
+    
+    // Simulate live data fluctuations (network traffic bouncing)
+    crowdInterval = setInterval(() => updateRealTimeData(spot), 3000);
+  }
+
+  function updateRealTimeData(spot) {
+    // In production, this data streams from Cloud Run (which processes Maps Traffic APIs / Cell data)
+    const variance = Math.floor(Math.random() * 9) - 4; // -4 to +4
+    const currentCrowd = spot.baseCrowd + variance;
+    
+    document.getElementById('crowd-count').innerText = currentCrowd;
+    
+    let network = "Strong 5G";
+    if (currentCrowd > 50) network = "Congested 4G/5G";
+    if (currentCrowd > 70) network = "Heavy Traffic Layer";
+    document.getElementById('network-status').innerText = network;
+  }
+
+  window.onload = initMap;
+
+  // --- Gemini AI Studio Client Logic ---
+  function toggleAI() {
+    const w = document.getElementById('ai-window');
+    w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
+  }
+
+  async function sendToGemini() {
+    const inputField = document.getElementById('ai-input');
+    const text = inputField.value.trim();
+    if (!text) return;
+
+    const chat = document.getElementById('ai-chat');
+    chat.innerHTML += `<div class="msg-user">${text}</div>`;
+    inputField.value = '';
+    chat.scrollTop = chat.scrollHeight;
+
+    // Call your Google Cloud Run Backend Endpoint (See server.js below)
+    try {
+      const response = await fetch('YOUR_CLOUD_RUN_URL/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text })
+      });
+      const data = await response.json();
+      chat.innerHTML += `<div class="msg-ai">${data.reply}</div>`;
+    } catch (err) {
+      chat.innerHTML += `<div class="msg-ai" style="color:#ef4444;">Error connecting to Cloud Run API. Is the backend deployed?</div>`;
+    }
+    chat.scrollTop = chat.scrollHeight;
+  }
+</script>
+</body>
+</html>
