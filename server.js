@@ -32,7 +32,7 @@ app.post('/api/chat', async (req, res) => {
         Provide helpful, ultra-accurate local insights in a friendly, concise manner (under 3 sentences unless requested otherwise).`;
 
         // Fixed model identifiers to valid, supported Google GenAI model names
-        const models = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+        const models = ['gemini-3.6-flash', 'gemini-3.6-pro'];
         let data = null;
         let success = false;
 
