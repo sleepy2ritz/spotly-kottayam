@@ -20,7 +20,8 @@ app.get('/', (req, res) => {
 });
 
 // Gemini AI Chat API Endpoint
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+; 
 
 app.post('/api/chat', async (req, res) => {
     try {
