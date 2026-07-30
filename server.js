@@ -25,17 +25,16 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 app.post('/api/chat', async (req, res) => {
     try {
         if (!GEMINI_API_KEY) {
-            return res.status(500).json({ reply: "GEMINI_API_KEY is missing in Render Environment Variables!" });
+            return res.status(500).json({ reply: "GEMINI_API_KEY is missing in environment variables!" });
         }
 
         const { prompt } = req.body;
 
-        const systemPrompt = `You are SpotBot, an intelligent local guide built into Spotly for Kottayam, Kerala. 
-        You know everything about Kottayam: study spots, cafes, public libraries, sports turfs, parks, colleges, view points, and food spots.
-        Recommend spots based on what the user asks. Keep your answers helpful, local, casual, and brief (under 3 sentences).`;
+        const systemPrompt = `You are SpotBot, an expert local guide embedded in Spotly for Kottayam, Kerala. 
+        You have deep local knowledge of Kottayam District: from Kanjikuzhy cafes, Nagampadam turfs, Thirunakkara hangouts, Kumarakom backwaters, Pala colleges, and Ettumanoor food spots to quiet libraries and study spaces.
+        Provide helpful, ultra-accurate local insights in a friendly, concise manner (under 3 sentences unless requested otherwise).`;
 
-        // Standard production endpoint for Gemini 1.5 Flash
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -55,7 +54,7 @@ app.post('/api/chat', async (req, res) => {
             return res.status(500).json({ reply: `Gemini Error: ${data.error.message || "Invalid request"}` });
         }
 
-        const botReply = data.candidates[0].content.parts[0].text;
+        const botReply = data.candidates[0]?.content?.parts[0]?.text || "I couldn't process that response right now.";
         res.json({ reply: botReply });
     } catch (error) {
         console.error("Server Error:", error);
@@ -65,5 +64,5 @@ app.post('/api/chat', async (req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-    console.log(`Spotly API listening on port ${PORT}`);
+    console.log(`📍 Spotly Kottayam Server running on port ${PORT}`);
 });
